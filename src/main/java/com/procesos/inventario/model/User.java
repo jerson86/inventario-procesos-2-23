@@ -1,39 +1,78 @@
 package com.procesos.inventario.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.annotation.Generated;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.Collection;
 import java.util.List;
 
-@Entity
 @Data
-public class User {
+@Entity
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class User implements UserDetails {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @NotNull(message = "firstName is required")
-    @Size(min=1, max = 100, message = "firstName max 100 characters")
+    @NotNull(message = "firstname is required")
+    @Size(max = 255,message = "firstname max 255 characters")
     private String firstName;
-    @NotNull(message = "lastName is required")
-    @Size(min=1, max = 100, message = "lastName max 100 characters")
+    @NotNull(message = "lastname is required")
+    @Size(max = 255,message = "lastname max 255 characters")
     private String lastName;
+    @NotNull(message = "document is required")
+    @Size(min = 5, max = 15, message = "document min 5 characters and max 15")
+    private String document;
+    private String phone;
+    @NotNull(message = "email is required")
+    @Email(message = "email not valid")
+    private String email;
+    @NotNull(message = "password is required")
+    @Size(min = 8, message = "password min 8 characters")
+    private String password;
     @JsonIgnore
     @OneToMany(mappedBy = "user")
-    private List<Address> address;
-    @NotNull(message = "email is required")
-    @Email
-    private String email;
-    @NotNull(message = "phone is required")
-    @Size(min=1, max = 16, message = "phone min 1 and max 16 characters")
-    private String phone;
-    @NotNull(message = "password is required")
-    @Size(min=8, max = 20, message = "password min 8 and max 20 characters")
-    private String password;
-    @NotNull(message = "document is required")
-    @Size(min=5, max = 20, message = "document min 5 and max 20 characters")
-    private String document;
+    List<Address> addressList;
+    @Enumerated(EnumType.STRING)
+    private Role role;
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(new SimpleGrantedAuthority(role.name()));
+    }
+
+    @Override
+    public String getUsername() {
+        return this.email;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
 }

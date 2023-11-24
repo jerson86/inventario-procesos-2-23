@@ -34,8 +34,6 @@ public class UserService {
             User userBd = userRepository.findById(id).get();
             userBd.setFirstName(user.getFirstName());
             userBd.setLastName(user.getLastName());
-            userBd.setAddress(user.getAddress());
-            userBd.setEmail(user.getEmail());
             userBd.setPhone(user.getPhone());
             return userRepository.save(userBd);
         }
