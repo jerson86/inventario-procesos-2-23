@@ -1,8 +1,10 @@
 package com.procesos.inventario.service;
 
+import com.procesos.inventario.exceptions.AlreadyExistsException;
 import com.procesos.inventario.exceptions.NotFoundException;
 import com.procesos.inventario.model.User;
 import com.procesos.inventario.repository.UserRepository;
+import com.procesos.inventario.util.Constants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +17,10 @@ public class UserService {
     private UserRepository userRepository;
 
     public User createUser(User user){
+        Optional<User> existingUserByEmail = userRepository.findByEmail(user.getEmail());
+        if (existingUserByEmail.isPresent()) {
+            throw new AlreadyExistsException(Constants.USER_EMAIL_EXISTS.getMessage());
+        }
         return userRepository.save(user);
     }
 
@@ -30,14 +36,20 @@ public class UserService {
     }
 
     public User updateUser(User user, Long id){
-        if(userRepository.existsById(id)){
-            User userBd = userRepository.findById(id).get();
-            userBd.setFirstName(user.getFirstName());
-            userBd.setLastName(user.getLastName());
-            userBd.setPhone(user.getPhone());
-            return userRepository.save(userBd);
+        Optional<User> userBd = userRepository.findById(id);
+        if(userBd.isEmpty()){
+            throw new NotFoundException("User not found");
         }
-        return null;
+        if(!userBd.get().getEmail().equals(user.getEmail())){
+            Optional<User> existingUserByEmail = userRepository.findByEmail(user.getEmail());
+            if (existingUserByEmail.isPresent()) {
+                throw new AlreadyExistsException(Constants.USER_EMAIL_EXISTS.getMessage());
+            }
+        }
+        userBd.get().setFirstName(user.getFirstName());
+        userBd.get().setLastName(user.getLastName());
+        userBd.get().setPhone(user.getPhone());
+        return userRepository.save(userBd.get());
     }
 
     public Boolean deleteUserById(Long id){
